@@ -1,0 +1,80 @@
+'''
+    ComfyUI_Python_AH_Prompt_062124
+    Weight two prompts over time. Attack Hold.
+    (c) 2024 Atom.
+'''
+
+class AttackHoldWeightedPrompt:
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("prompt",)
+    
+    FUNCTION = "node_update"
+    CATEGORY = "Scripting"
+    
+    def __init__(self):
+        pass
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "previous_prompt": ("STRING", {"default": "last prompt..."}),
+                "current_prompt": ("STRING", {"default": "current prompt..."}),
+                "current_frame": ("INT", {"default": 311, "step": 1, "display": "number"}),
+                "hold_frames": ("INT", {"default": 18, "step": 1, "display": "number"}),
+                "hold_delay": ("FLOAT", {"default": 0.2, "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.001, "display": "number"}),
+            },
+        }
+   
+    def node_update(self, previous_prompt, current_prompt, current_frame, hold_frames, hold_delay):
+        def lerp(a: float, b: float, t: float) -> float:
+            return (1 - t) * a + t * b
+        def inv_lerp(a: float, b: float, v: float) -> float:
+            return (v - a) / (b - a)
+        def fit(v: float, i_min: float, i_max: float, o_min: float, o_max: float) -> float:
+            bias = v
+            if bias > i_max: 
+                bias = i_max
+            if bias < i_min: 
+                bias = i_min
+            return lerp(o_min, o_max, inv_lerp(i_min, i_max, bias))
+
+        # Hold frames is the number of frame the current prompt exists over.
+        index = int(current_frame/hold_frames)
+        hold_start = hold_frames * index
+        hold_end = hold_start + hold_frames
+
+        # Percentage traveled through hold time.
+        bias = fit(current_frame,hold_start,hold_end,0.0,1.0)
+
+        # Remap for AH. Attack, Hold.
+        remapped_bias = bias
+        if (bias>hold_delay): 
+            # Return hold value.
+            remapped_bias = 1.0
+
+        # Print the interpolated prompt.
+        if (remapped_bias==0):
+            # Effectively a single previous prompt.
+            result = "%s" % (previous_prompt)
+        else:
+            if ((1.0-remapped_bias)==0):
+                # Effectively a single current prompt.
+                result = "%s" % (current_prompt)
+            else:
+                # A crude blend between two prompts.
+                result = "(%s:%3f) AND (%s:%3f)" % (previous_prompt,1.0-remapped_bias,current_prompt,remapped_bias)
+
+        return (result, )
+
+    @classmethod
+    def IS_CHANGED(self, previous_prompt, current_prompt, current_frame, hold_frames, hold_delay):
+        # Detect changed values?
+        node_update(previous_prompt, current_prompt, current_frame, hold_frames, hold_delay)
+        return ("",)
+        
+# NOTE: names should be globally unique
+NODE_CLASS_MAPPINGS = {"AttackHoldWeightedPrompt": AttackHoldWeightedPrompt}
+
+# A dictionary that contains the friendly/humanly readable titles for the nodes
+NODE_DISPLAY_NAME_MAPPINGS = {"AttackHoldWeightedPrompt": "Attack Hold Weighted Prompt (AH)"}

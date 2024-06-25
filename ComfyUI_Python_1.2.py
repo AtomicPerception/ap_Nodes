@@ -4,6 +4,7 @@
     Version 1.2
         New code injection input and companion output.
         Access to last generated value through PREVIOUS_OUTPUT constant.
+        Access to connected inputs through IN1, IN2, IN3 constants.
     (c) 2024 Atom. 06/24/24.
 '''
 

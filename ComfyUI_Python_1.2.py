@@ -94,7 +94,7 @@ class PythonSnippet:
         if code_inject!=None:
             # Grab code from the input to prefix the user's text box.
             code = code_inject
-            code += "; " + code_string
+            code += "\n" + code_string
         else:
             # Grab the seed from the node to set initial random seed.
             code = code_string

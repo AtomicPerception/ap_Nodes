@@ -1,9 +1,9 @@
 '''
-    Process Yvann Audio Reactive Peak Frame List.
-    Atom. 02/06/26.
+Process Yvann Audio Reactive Peak Frame List.
+Atom. 02/06/26.
 '''
 
-VERSION = "1.0"
+VERSION = "1.1"
 
 class ap_AudioFrameSchedule:
     @classmethod
@@ -25,15 +25,23 @@ class ap_AudioFrameSchedule:
                         "step": 1,
                     },
                 ),
+                "beat_skip": (
+                    "INT",
+                    {
+                        "default": 0,
+                        "min": 0,
+                        "step": 1,
+                    },
+                ),
             }
         }
 
-    RETURN_TYPES = ("INT", "INT", "INT")
-    RETURN_NAMES = ("value", "distance", "count")
+    RETURN_TYPES = ("INT", "INT", "INT", "STRING")
+    RETURN_NAMES = ("value", "distance", "count", "beat_map")
     FUNCTION = "get_value"
     CATEGORY = "utils"
 
-    def get_value(self, values: str, index: int):
+    def get_value(self, values: str, index: int, beat_skip: int):
         # Parse comma-delimited string into integers
         try:
             int_list = [int(v.strip()) for v in values.split(",") if v.strip() != ""]
@@ -42,6 +50,14 @@ class ap_AudioFrameSchedule:
 
         if not int_list:
             raise ValueError("No valid integers found in input string")
+
+        # Apply beat skipping
+        if beat_skip > 0:
+            step = beat_skip + 1
+            int_list = int_list[::step]
+
+        if not int_list:
+            raise ValueError("All values were removed by beat_skip")
 
         count = len(int_list)
 
@@ -56,7 +72,9 @@ class ap_AudioFrameSchedule:
             previous_value = int_list[index - 1]
             distance = abs(current_value - previous_value)
 
-        return (current_value, distance, count)
+        beat_map = ", ".join(str(v) for v in int_list)
+
+        return (current_value, distance, count, beat_map)
 
 
 NODE_CLASS_MAPPINGS = {

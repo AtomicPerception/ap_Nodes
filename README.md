@@ -2,4 +2,4 @@
 The Python Code Box node for Comfy
 
 Installtion:
-  Drop the file into your Comfy custom_nodes folder.
+  Drop the files into your Comfy _custom_nodes_ folder.

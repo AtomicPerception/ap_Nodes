@@ -1,0 +1,103 @@
+import os
+import hashlib
+
+VERSION = 1.1
+
+class ap_Folder:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "directory": ("STRING", {
+                    "default": "",
+                    "multiline": False
+                }),
+                "extension": ([".mp3", ".wav", ".jpg", ".png", ".mp4"],),
+                "index": ("INT", {
+                    "default": 0,
+                    "min": 0,
+                    "step": 1
+                }),
+            }
+        }
+
+    RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "STRING")
+    RETURN_NAMES = (
+        "files",
+        "index_file",
+        "path",
+        "filename",
+        "file_extension",
+    )
+    FUNCTION = "get_files"
+    CATEGORY = "ap"
+
+    @classmethod
+    def IS_CHANGED(cls, directory="", extension="", index=0, **kwargs):
+        """
+        Re-run only when:
+        - directory changes
+        - extension changes
+        - index changes
+        - directory file list changes
+        """
+        if not directory or not os.path.isdir(directory):
+            return "invalid_directory"
+
+        try:
+            files = sorted(
+                f for f in os.listdir(directory)
+                if f.lower().endswith(extension)
+            )
+        except Exception:
+            return "dir_error"
+
+        hash_input = (
+            directory,
+            extension,
+            index,
+            tuple(files),
+        )
+
+        return hashlib.md5(str(hash_input).encode("utf-8")).hexdigest()
+
+    def get_files(self, directory, extension, index):
+        if not os.path.isdir(directory):
+            return ("", "", "", "", "")
+
+        files = [
+            os.path.join(directory, f)
+            for f in sorted(os.listdir(directory))
+            if f.lower().endswith(extension)
+        ]
+
+        files_csv = ",".join(files)
+
+        if not files:
+            return (files_csv, "", "", "", "")
+
+        # Clamp index safely
+        index = max(0, min(index, len(files) - 1))
+        index_file = files[index]
+
+        # Parse index_file
+        path, base = os.path.split(index_file)
+        filename, file_extension = os.path.splitext(base)
+
+        return (
+            files_csv,
+            index_file,
+            path,
+            filename,
+            file_extension,
+        )
+
+
+# ComfyUI registration
+NODE_CLASS_MAPPINGS = {
+    "ap_Folder": ap_Folder
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "ap_Folder": f"Folder File Selector {VERSION}"
+}

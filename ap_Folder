@@ -57,10 +57,24 @@ class ap_Folder:
 		if not directory or not os.path.isdir(directory):
 			return "invalid_directory"
 
+		EXTENSIONS = {
+			"JPEG": [".jpg", ".jpeg"],
+			"PNG": [".png"],
+			"Images": [".jpg", ".jpeg", ".png"],
+			"Audio": [".mp3", ".wav"],
+			"Video": [".mp4"],
+			"WAV": [".wav"],
+			"MP3": [".mp3"],
+			"Text": [".txt"],
+		}
+
+		# Resolve the selected extension name to its actual extensions.
+		extensions = EXTENSIONS.get(extension, [])
+
 		try:
 			files = sorted(
 				f for f in os.listdir(directory)
-				if any(f.lower().endswith(ext) for ext in extension)
+				if any(f.lower().endswith(ext) for ext in extensions)
 			)
 		except Exception:
 			return "dir_error"
@@ -78,10 +92,24 @@ class ap_Folder:
 		if not os.path.isdir(directory):
 			return ("", "", "", "", "", 0)
 
+		EXTENSIONS = {
+			"JPEG": [".jpg", ".jpeg"],
+			"PNG": [".png"],
+			"Images": [".jpg", ".jpeg", ".png"],
+			"Audio": [".mp3", ".wav"],
+			"Video": [".mp4"],
+			"WAV": [".wav"],
+			"MP3": [".mp3"],
+			"Text": [".txt"],
+		}
+
+		# Resolve the selected extension name to its actual extensions.
+		extensions = EXTENSIONS.get(extension, [])
+
 		files = [
 			os.path.join(directory, f)
 			for f in sorted(os.listdir(directory))
-			if any(f.lower().endswith(ext) for ext in extension)
+			if any(f.lower().endswith(ext) for ext in extensions)
 		]
 
 		files_csv = ",\n".join(files)
